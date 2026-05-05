@@ -3,6 +3,8 @@ uvicorn
 pydantic
 sqlalchemy
 python-multipart
+psycopg2-binary
+python-dotenv
 scikit-learn
 joblib
 pandas
