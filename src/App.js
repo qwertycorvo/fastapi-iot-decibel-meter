@@ -1,6 +1,6 @@
 import './App.css';
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Login from './components/Login';
 import Layout from './components/Layout';
 import Welcome from './components/Welcome';
@@ -14,37 +14,22 @@ import UserSettings from './components/UserSettings';
 import ReportForm from './components/ReportForm';
 import Reports from './components/Reports';
 import ReportDetails from './components/ReportDetails';
-
-// initial data moved from components
-const initialUsers = [
-  { id: 1, name: 'Alice Johnson', email: 'alice.johnson@example.com', role: 'admin', status: 'active' },
-  { id: 2, name: 'Bob Smith', email: 'bob.smith@example.com', role: 'enforcer', status: 'disabled' },
-];
-
-const initialDevices = [
-  { id: 'DEV-001', location: 'Building A - Lobby', status: 'online', lastReading: '2026-03-01 09:45' },
-  { id: 'DEV-002', location: 'Building B - Floor 3', status: 'offline', lastReading: '2026-03-01 08:12' },
-];
-
-const initialStats = {
-  activeSensors: 128,
-  highestDb: 102.5,
-  violationsToday: 3,
-  onlineDevices: 54,
-};
-
-const initialViolations = [
-  { id: 1, sensor: 'Sensor A', level: 95.7, time: '2026-03-01 09:23', reportId: null },
-];
+import * as api from './api';
 
 function App() {
   const [loggedIn, setLoggedIn] = React.useState(false);
 
   // lifted state
-  const [users, setUsers] = useState(initialUsers);
-  const [devices, setDevices] = useState(initialDevices);
-  const [stats, setStats] = useState(initialStats);
-  const [violations, setViolations] = useState(initialViolations);
+  const [users, setUsers] = useState([]);
+  const [devices, setDevices] = useState([]);
+  const [stats, setStats] = useState({
+    activeSensors: 0,
+    highestDb: 0,
+    violationsToday: 0,
+    onlineDevices: 0,
+  });
+  const [violations, setViolations] = useState([]);
+  const [reports, setReports] = useState([]);
 
   const [userEmail, setUserEmail] = useState('');
   const [currentUser, setCurrentUser] = useState({
@@ -54,35 +39,45 @@ function App() {
     picture: '',
   });
 
-  const [reports, setReports] = useState([]);
   const [showLoginSuccess, setShowLoginSuccess] = useState(false);
 
-  // when a report is created we'll optionally create a violation entry if it's pending
-  const addReport = (report) => {
-    setReports((prev) => {
-      const nextId = prev.length ? prev[prev.length - 1].id + 1 : 1;
-      const publishedDate = new Date().toISOString().slice(0, 16).replace('T', ' ');
-      const newReport = { id: nextId, publishedDate, ...report };
-
-      // automatically create corresponding violation for pending reports
-      if (newReport.status === 'PENDING') {
-        setViolations((vprev) => {
-          const vid = vprev.length ? vprev[vprev.length - 1].id + 1 : 1;
-          return [
-            ...vprev,
-            {
-              id: vid,
-              sensor: newReport.location,
-              level: 0, // placeholder level
-              time: newReport.datetime,
-              reportId: newReport.id,
-            },
-          ];
-        });
-        setStats((s) => ({ ...s, violationsToday: s.violationsToday + 1 }));
+  // Initial data fetch
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [usersData, devicesData, statsData, violationsData, reportsData] = await Promise.all([
+          api.fetchUsers(),
+          api.fetchDevices(),
+          api.fetchStats(),
+          api.fetchViolations(),
+          api.fetchReports(),
+        ]);
+        setUsers(usersData);
+        setDevices(devicesData);
+        setStats(statsData);
+        setViolations(violationsData);
+        setReports(reportsData);
+      } catch (error) {
+        console.error("Failed to fetch data from API", error);
       }
-      return [...prev, newReport];
-    });
+    };
+    fetchData();
+  }, []);
+
+  const addReport = async (report) => {
+    try {
+      const newReport = await api.createReport(report);
+      setReports((prev) => [...prev, newReport]);
+      // Refresh stats and violations as they might have changed on backend
+      const [statsData, violationsData] = await Promise.all([
+        api.fetchStats(),
+        api.fetchViolations(),
+      ]);
+      setStats(statsData);
+      setViolations(violationsData);
+    } catch (error) {
+      console.error("Failed to add report", error);
+    }
   };
 
   const updateCurrentUser = (updates) => {
@@ -114,91 +109,117 @@ function App() {
   };
 
   // user handlers
-  const addOrUpdateUser = (user) => {
-    setUsers((prev) => {
+  const addOrUpdateUser = async (user) => {
+    try {
       if (user.id) {
-        return prev.map((u) => (u.id === user.id ? user : u));
+        const updated = await api.updateUser(user.id, user);
+        setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      } else {
+        const created = await api.createUser(user);
+        setUsers((prev) => [...prev, created]);
       }
-      const nextId = prev.length ? Math.max(...prev.map((u) => u.id)) + 1 : 1;
-      return [...prev, { ...user, id: nextId }];
-    });
+    } catch (error) {
+      console.error("Failed to add/update user", error);
+    }
   };
-  const deleteUser = (id) => setUsers((prev) => prev.filter((u) => u.id !== id));
+  
+  const deleteUser = async (id) => {
+    try {
+      await api.deleteUser(id);
+      setUsers((prev) => prev.filter((u) => u.id !== id));
+    } catch (error) {
+      console.error("Failed to delete user", error);
+    }
+  };
 
   // device handlers
-  const addOrUpdateDevice = (device) => {
-    setDevices((prev) => {
-      const exists = prev.some((d) => d.id === device.id);
+  const addOrUpdateDevice = async (device) => {
+    try {
+      // For devices, ID is provided by user or existing
+      const exists = devices.some((d) => d.id === device.id);
       if (exists) {
-        return prev.map((d) => (d.id === device.id ? device : d));
+        const updated = await api.updateDevice(device.id, device);
+        setDevices((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
+      } else {
+        const created = await api.createDevice(device);
+        setDevices((prev) => [...prev, created]);
       }
-      return [...prev, device];
-    });
+    } catch (error) {
+      console.error("Failed to add/update device", error);
+    }
   };
-  const deleteDevice = (id) => setDevices((prev) => prev.filter((d) => d.id !== id));
-  const toggleDeviceStatus = (id) => {
-    setDevices((prev) =>
-      prev.map((d) =>
-        d.id === id
-          ? { ...d, status: d.status === 'online' ? 'offline' : 'online' }
-          : d
-      )
-    );
+
+  const deleteDevice = async (id) => {
+    try {
+      await api.deleteDevice(id);
+      setDevices((prev) => prev.filter((d) => d.id !== id));
+    } catch (error) {
+      console.error("Failed to delete device", error);
+    }
+  };
+
+  const toggleDeviceStatus = async (id) => {
+    const device = devices.find(d => d.id === id);
+    if (device) {
+      const updatedDevice = { ...device, status: device.status === 'online' ? 'offline' : 'online' };
+      await addOrUpdateDevice(updatedDevice);
+    }
   };
 
   // stats/violations handlers
-  const addViolation = (violation) => {
-    setViolations((prev) =>
-      typeof violation === 'function' ? violation(prev) : [...prev, violation]
-    );
-    setStats((prev) => ({ ...prev, violationsToday: prev.violationsToday + 1 }));
-  };
-  const removeViolationByReport = (reportId) => {
-    setViolations((prev) => prev.filter((v) => v.reportId !== reportId));
-    setStats((prev) => ({
-      ...prev,
-      violationsToday: Math.max(0, prev.violationsToday - 1),
-    }));
+  const addViolation = async (violation) => {
+    try {
+      const created = await api.createViolation(violation);
+      setViolations((prev) => [...prev, created]);
+      const statsData = await api.fetchStats();
+      setStats(statsData);
+    } catch (error) {
+      console.error("Failed to add violation", error);
+    }
   };
 
-  const updateStats = (updates) => setStats((prev) => ({ ...prev, ...updates }));
+  const updateStats = async (updates) => {
+    try {
+      const newStats = { ...stats, ...updates };
+      const updated = await api.updateStats(newStats);
+      setStats(updated);
+    } catch (error) {
+      console.error("Failed to update stats", error);
+    }
+  };
 
   // Helper for report details route
   function ReportDetailsWrapper() {
     const { id } = useParams();
-    const [report, setReport] = React.useState(() => reports.find((r) => String(r.id) === String(id)));
+    const [report, setReport] = useState(null);
 
-    const handleUpdate = (updated) => {
-      // determine if status transitioned in/out of PENDING
-      if (report.status !== updated.status) {
-        const prevStatus = report.status;
-        const newStatus = updated.status;
-        if (prevStatus === 'PENDING' && newStatus !== 'PENDING') {
-          // remove any violation tied to this report
-          removeViolationByReport(updated.id);
-        } else if (prevStatus !== 'PENDING' && newStatus === 'PENDING') {
-          // add violation for re‑pending report
-          setViolations((vprev) => {
-            const vid = vprev.length ? vprev[vprev.length - 1].id + 1 : 1;
-            return [
-              ...vprev,
-              {
-                id: vid,
-                sensor: updated.location,
-                level: 0,
-                time: updated.datetime,
-                reportId: updated.id,
-              },
-            ];
-          });
-          setStats((s) => ({ ...s, violationsToday: s.violationsToday + 1 }));
-        }
+    useEffect(() => {
+      const getReport = async () => {
+        const data = await api.fetchReport(id);
+        setReport(data);
+      };
+      getReport();
+    }, [id]);
+
+    const handleUpdate = async (updated) => {
+      try {
+        const result = await api.updateReport(updated.id, updated);
+        setReports((prev) => prev.map((r) => (r.id === result.id ? result : r)));
+        setReport(result);
+        
+        // Refresh stats and violations as they might have changed on backend due to status transition
+        const [statsData, violationsData] = await Promise.all([
+          api.fetchStats(),
+          api.fetchViolations(),
+        ]);
+        setStats(statsData);
+        setViolations(violationsData);
+      } catch (error) {
+        console.error("Failed to update report", error);
       }
-
-      setReports((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
-      setReport(updated);
     };
 
+    if (!report) return <div>Loading...</div>;
     return <ReportDetails report={report} onUpdate={handleUpdate} currentUser={currentUser} />;
   }
 

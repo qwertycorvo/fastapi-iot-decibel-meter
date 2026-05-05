@@ -1,17 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/reports.css';
 
 const ReportUpdate = ({ report, onUpdate, currentUser }) => {
   const [status, setStatus] = useState(report.status || 'PENDING');
   const [comment, setComment] = useState('');
-  const [comments, setComments] = useState(report.comments || []);
+  
+  let initialComments = [];
+  try {
+    initialComments = typeof report.comments === 'string' ? JSON.parse(report.comments) : (report.comments || []);
+  } catch (e) {
+    console.error("Failed to parse comments", e);
+  }
+  
+  const [comments, setComments] = useState(initialComments);
   const [showForm, setShowForm] = useState(false);
+
+  useEffect(() => {
+    let updatedComments = [];
+    try {
+      updatedComments = typeof report.comments === 'string' ? JSON.parse(report.comments) : (report.comments || []);
+    } catch (e) {
+      console.error("Failed to parse comments", e);
+    }
+    setComments(updatedComments);
+    setStatus(report.status || 'PENDING');
+  }, [report.comments, report.status]);
 
   const handleUpdate = (e) => {
     e.preventDefault();
     const userLabel = `${currentUser.username} [${currentUser.role ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1) : 'User'}]`;
     const newComments = comment ? [...comments, { text: comment, date: new Date().toISOString().slice(0, 16).replace('T', ' '), user: userLabel }] : comments;
-    onUpdate({ ...report, status, comments: newComments });
+    onUpdate({ ...report, status, comments: JSON.stringify(newComments) });
     setComments(newComments);
     setComment('');
     setShowForm(false);

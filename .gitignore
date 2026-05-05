@@ -26,3 +26,13 @@ yarn-error.log*
 # expo
 .expo/
 /mobile/.expo/
+
+# python
+__pycache__/
+*.py[cod]
+*$py.class
+backend/sql_app.db
+.venv/
+venv/
+ENV/
+.env

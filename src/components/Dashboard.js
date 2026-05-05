@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/dashboard.css';
+import * as api from '../api';
 import {
   LineChart,
   Line,
@@ -16,6 +17,7 @@ const Dashboard = ({ stats, violations, devices = [], updateStats }) => {
   const [dbValue, setDbValue] = useState(48);
   const [loadLevel, setLoadLevel] = useState('Low');
   const [history, setHistory] = useState([]); // keep last 50 points for chart
+  const [prediction, setPrediction] = useState(null);
   const mapPositions = [
   { x: 14, y: 26 },
   { x: 38, y: 18 },
@@ -34,9 +36,18 @@ const fallbackSensors = [
 ];
 
   useEffect(() => {
-    const id = setInterval(() => {
+    const id = setInterval(async () => {
       const next = Math.max(35, Math.min(110, Math.round(dbValue + (Math.random() * 16 - 8))));
       setDbValue(next);
+
+      // Fetch AI Prediction
+      try {
+        const hour = new Date().getHours();
+        const pred = await api.getPrediction(next, hour);
+        setPrediction(pred);
+      } catch (e) {
+        console.error("AI Prediction failed", e);
+      }
 
       // update stats in parent if provided (e.g. highest db)
       if (updateStats && next > stats.highestDb) {
@@ -107,6 +118,15 @@ const fallbackSensors = [
                   <span className="metric-label">Load</span>
                   <span className={`metric-value ${loadLevel.toLowerCase()}`}>{loadLevel}</span>
                 </div>
+                {prediction && (
+                  <div className="metric ai-prediction">
+                    <span className="metric-label">AI Impact</span>
+                    <span className={`metric-value category-${prediction.category.toLowerCase()}`}>
+                      {prediction.category}
+                      <small>({(prediction.confidence * 100).toFixed(0)}%)</small>
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
             <div className="hero-right" aria-hidden="true">

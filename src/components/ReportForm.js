@@ -62,7 +62,7 @@ const ReportForm = ({ addReport }) => {
       datetime: form.datetime,
       plate: form.plate,
       vehicleType: form.vehicleType,
-      attachments: form.attachments.map((f) => ({ name: f.name, type: f.type, file: f })),
+      attachments: JSON.stringify(form.attachments.map((f) => ({ name: f.name, type: f.type }))),
       status: 'PENDING',
     };
     addReport(report);
