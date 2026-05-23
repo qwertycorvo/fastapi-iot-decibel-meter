@@ -12,6 +12,10 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+@app.get("/")
+def read_root():
+    return {"status": "online", "message": "Decibel Meter API is running", "database": "connected"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
