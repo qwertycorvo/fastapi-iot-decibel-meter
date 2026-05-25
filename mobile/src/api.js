@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8000'; // Note: Use your machine's IP if testing on a real device
+const API_BASE_URL = 'https://fastapi-iot-decibel-meter.onrender.com'; // Production Render Backend
 
 export const fetchStats = async () => {
   const response = await fetch(`${API_BASE_URL}/stats/`);
