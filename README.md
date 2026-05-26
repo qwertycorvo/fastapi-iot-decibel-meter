@@ -41,3 +41,26 @@ An AI-powered IoT system designed for real-time noise tracking and classificatio
 ---
 Developed for noise regulation and urban planning.
 
+## Installation & Setup
+### Backend
+1. `cd backend`
+2. `pip install -r requirements.txt`
+3. `uvicorn main:app --reload`
+
+### Frontend
+1. `npm install`
+2. `npm start`
+
+### Mobile
+1. `cd mobile`
+2. `npm install`
+3. `npx expo start`
+
+## Deployment Links
+- **Web Dashboard**: [https://decibel-meter-frontend.vercel.app/](https://decibel-meter-frontend.vercel.app/)
+- **API Documentation**: [https://fastapi-iot-decibel-meter.onrender.com/docs](https://fastapi-iot-decibel-meter.onrender.com/docs)
+
+## Team Members and Roles
+- **Ra Mikel**: Project Manager
+- **Ryan Otacan**: Frontend Developer
+- **John Loyd Abang**: Backend Developer
