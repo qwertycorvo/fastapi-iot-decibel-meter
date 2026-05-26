@@ -38,9 +38,6 @@ An AI-powered IoT system designed for real-time noise tracking and classificatio
 4. **Storage**: Data is persisted in the Supabase PostgreSQL database.
 5. **Visualization**: The React and Expo frontends fetch the latest stats via GET requests and display them in real-time.
 
----
-Developed for noise regulation and urban planning.
-
 ## Installation & Setup
 ### Backend
 1. `cd backend`
@@ -64,3 +61,6 @@ Developed for noise regulation and urban planning.
 - **Ra Mikel**: Project Manager
 - **Ryan Otacan**: Frontend Developer
 - **John Loyd Abang**: Backend Developer
+
+---
+Developed for noise regulation and urban planning.
