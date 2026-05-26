@@ -72,7 +72,7 @@ export default function DashboardScreen({ navigation, onLogout }) {
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Active Sensors</Text>
-            <Text style={styles.statValue}>1</Text>
+            <Text style={styles.statValue}>{activeSensors}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Highest dB</Text>
@@ -80,7 +80,7 @@ export default function DashboardScreen({ navigation, onLogout }) {
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Violations Today</Text>
-            <Text style={styles.statValue}>0</Text>
+            <Text style={styles.statValue}>{violationsToday}</Text>
           </View>
         </View>
 
