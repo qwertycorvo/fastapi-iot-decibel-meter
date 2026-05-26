@@ -20,6 +20,15 @@ export const fetchReports = async () => {
   return response.json();
 };
 
+export const getPrediction = async (db_level, hour) => {
+  const response = await fetch(`${API_BASE_URL}/predict/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ db_level, hour }),
+  });
+  return response.json();
+};
+
 export const createReport = async (report) => {
   const response = await fetch(`${API_BASE_URL}/reports/`, {
     method: 'POST',
