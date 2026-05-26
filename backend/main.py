@@ -36,6 +36,7 @@ def startup_populate_db():
         if not db.query(models.Device).first():
             crud.create_device(db, schemas.DeviceCreate(id="DEV-001", location="Centrio Mall", status="online", lastReading="2026-03-01 09:45"))
             crud.create_device(db, schemas.DeviceCreate(id="DEV-002", location="Divisoria Plaza", status="offline", lastReading="2026-03-01 08:12"))
+            crud.create_device(db, schemas.DeviceCreate(id="DEV-003", location="USTP", status="online", lastReading="2026-03-01 10:00"))
         
         if not db.query(models.Stats).first():
             crud.update_stats(db, schemas.Stats(activeSensors=128, highestDb=102.5, violationsToday=3, onlineDevices=54))
