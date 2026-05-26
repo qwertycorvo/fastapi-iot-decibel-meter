@@ -27,10 +27,10 @@ const Dashboard = ({ stats, violations, devices = [], updateStats }) => {
   { x: 26, y: 64 },
 ];
 const fallbackSensors = [
-  { id: 'SEN-01', location: 'Divisoria Plaza' },
-  { id: 'SEN-02', location: 'Cogon Market' },
-  { id: 'SEN-03', location: 'Limketkai Center' },
-  { id: 'SEN-04', location: 'Centrio Mall' },
+  { id: 'SEN-01', location: 'Centrio Mall' },
+  { id: 'SEN-02', location: 'Divisoria Plaza' },
+  { id: 'SEN-03', location: 'Cogon Market' },
+  { id: 'SEN-04', location: 'Limketkai Center' },
   { id: 'SEN-05', location: 'Xavier University' },
   { id: 'SEN-06', location: 'City Hall' },
 ];
