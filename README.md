@@ -54,7 +54,7 @@ An AI-powered IoT system designed for real-time noise tracking and classificatio
 3. `npx expo start`
 
 ## Deployment Links
-- **Web Dashboard**: [https://decibel-meter-frontend.vercel.app/](https://decibel-meter-frontend.vercel.app/)
+- **Web Dashboard**: fastapi-iot-decibel-meter.vercel.app
 - **API Documentation**: [https://fastapi-iot-decibel-meter.onrender.com/docs](https://fastapi-iot-decibel-meter.onrender.com/docs)
 
 ## Team Members and Roles
