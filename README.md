@@ -62,5 +62,9 @@ An AI-powered IoT system designed for real-time noise tracking and classificatio
 - **Ryan Otacan**: Frontend Developer
 - **John Loyd Abang**: Backend Developer
 
+## Arduino Code
+ https://drive.google.com/file/d/1oDP3bcFDu7BDAa_2jtHqv8vmleIeIflU/view?usp=sharing
 ---
 Developed for noise regulation and urban planning.
+
+S
